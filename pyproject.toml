@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "multi-agent-debate"
+version = "1.0.0"
+description = "A multi-agent debate system for LLMs using OpenAI, Anthropic, and Cohere"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.coverage.run]
+source = ["agents", "orchestration", "evaluation", "data", "viz"]
+omit = ["tests/*"]

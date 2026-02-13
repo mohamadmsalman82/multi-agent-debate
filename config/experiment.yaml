@@ -1,0 +1,33 @@
+experiment:
+  name: reasoning_benchmark
+  description: "Evaluate debate quality across different protocols and provider combinations"
+
+benchmarks:
+  - name: reasoning
+    topics:
+      - "Should AI development be regulated by governments?"
+      - "Is universal basic income a viable economic policy?"
+      - "Should autonomous weapons be banned under international law?"
+    protocols:
+      - round_robin
+      - adversarial
+      - collaborative
+    max_turns: 8
+    repetitions: 3
+
+  - name: factual
+    topics:
+      - "What are the primary causes of climate change?"
+      - "How effective are current COVID-19 vaccines?"
+    protocols:
+      - round_robin
+    max_turns: 6
+    repetitions: 2
+
+evaluation:
+  metrics:
+    - coherence
+    - evidence_strength
+    - relevance
+    - argument_diversity
+  aggregate: mean
