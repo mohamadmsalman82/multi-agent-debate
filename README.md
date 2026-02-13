@@ -160,8 +160,8 @@ from agents import Proposer, Critic, Judge
 from agents.llm_provider import OpenAIProvider, AnthropicProvider, CohereProvider
 
 # Each agent uses a different LLM provider
-proposer = Proposer(provider=OpenAIProvider(model="gpt-4-turbo-preview"))
-critic   = Critic(provider=AnthropicProvider(model="claude-3-5-sonnet-20241022"))
+proposer = Proposer(provider=OpenAIProvider(model="gpt-4o"))
+critic   = Critic(provider=AnthropicProvider(model="claude-sonnet-4-5"))
 judge    = Judge(provider=CohereProvider(model="command-r-plus"))
 
 manager = DebateManager(
@@ -192,8 +192,8 @@ from agents import Proposer, Critic, Judge
 from agents.llm_provider import OpenRouterProvider
 
 # All agents use OpenRouter with different models
-proposer = Proposer(provider=OpenRouterProvider(model="openai/gpt-4-turbo"))
-critic   = Critic(provider=OpenRouterProvider(model="anthropic/claude-3.5-sonnet"))
+proposer = Proposer(provider=OpenRouterProvider(model="openai/gpt-4o"))
+critic   = Critic(provider=OpenRouterProvider(model="anthropic/claude-sonnet-4.5"))
 judge    = Judge(provider=OpenRouterProvider(model="cohere/command-r-plus"))
 
 manager = DebateManager(
@@ -260,16 +260,16 @@ asyncio.run(main())
 ```yaml
 api:
   openai:
-    model: gpt-4-turbo-preview
+    model: gpt-4o
     api_key_env: OPENAI_API_KEY
   anthropic:
-    model: claude-3-5-sonnet-20241022
+    model: claude-sonnet-4-5
     api_key_env: ANTHROPIC_API_KEY
   cohere:
     model: command-r-plus
     api_key_env: COHERE_API_KEY
   openrouter:
-    model: openai/gpt-4-turbo
+    model: openai/gpt-4o
     api_key_env: OPENROUTER_API_KEY
   timeout: 30
   max_retries: 3
@@ -292,11 +292,11 @@ agents:
 agents:
   proposer:
     provider: openrouter
-    model: openai/gpt-4-turbo      # Access GPT-4 via OpenRouter
+    model: openai/gpt-4o           # Access GPT-4o via OpenRouter
     temperature: 0.7
   critic:
     provider: openrouter
-    model: anthropic/claude-3.5-sonnet  # Access Claude via OpenRouter
+    model: anthropic/claude-sonnet-4.5  # Access Claude via OpenRouter
     temperature: 0.8
   fact_checker:
     provider: openrouter
@@ -313,11 +313,11 @@ python cli.py --config config/openrouter.yaml debate --topic "..."
 ### OpenRouter Model Names
 
 OpenRouter uses a `provider/model` format:
-- `openai/gpt-4-turbo`, `openai/gpt-4`, `openai/gpt-3.5-turbo`
-- `anthropic/claude-3.5-sonnet`, `anthropic/claude-3-opus`
+- `openai/gpt-4o`, `openai/gpt-4o-mini`, `openai/gpt-3.5-turbo`
+- `anthropic/claude-sonnet-4.5`, `anthropic/claude-haiku-4.5`
 - `cohere/command-r-plus`, `cohere/command-r`
 - `meta-llama/llama-3.1-70b-instruct`
-- `google/gemini-pro-1.5`
+- `google/gemini-2.5-pro-preview`
 - And many more — see [OpenRouter docs](https://openrouter.ai/docs)
 
 ---

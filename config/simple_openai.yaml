@@ -2,15 +2,6 @@ api:
   openai:
     model: gpt-4o
     api_key_env: OPENAI_API_KEY
-  anthropic:
-    model: claude-sonnet-4-5
-    api_key_env: ANTHROPIC_API_KEY
-  cohere:
-    model: command-r-plus
-    api_key_env: COHERE_API_KEY
-  openrouter:
-    model: openai/gpt-4o
-    api_key_env: OPENROUTER_API_KEY
   timeout: 30
   max_retries: 3
 
@@ -22,21 +13,22 @@ debate:
     - collaborative
   default_protocol: round_robin
 
+# All agents use OpenAI - only need ONE API key
 agents:
   proposer:
     provider: openai
     temperature: 0.7
     max_tokens: 500
   critic:
-    provider: anthropic
+    provider: openai
     temperature: 0.8
     max_tokens: 500
   fact_checker:
-    provider: cohere
+    provider: openai
     temperature: 0.3
     max_tokens: 300
   moderator:
-    provider: anthropic
+    provider: openai
     temperature: 0.5
     max_tokens: 400
   judge:

@@ -51,14 +51,14 @@ All through your single OpenRouter API key.
 OpenRouter supports 100+ models. Popular choices:
 
 ### OpenAI
-- `openai/gpt-4-turbo`
-- `openai/gpt-4`
+- `openai/gpt-4o` (recommended)
+- `openai/gpt-4o-mini`
 - `openai/gpt-3.5-turbo`
 
 ### Anthropic
-- `anthropic/claude-3.5-sonnet` (recommended)
-- `anthropic/claude-3-opus`
-- `anthropic/claude-3-sonnet`
+- `anthropic/claude-sonnet-4.5` (recommended)
+- `anthropic/claude-haiku-4.5`
+- `anthropic/claude-opus-4.6`
 
 ### Cohere
 - `cohere/command-r-plus`
@@ -69,8 +69,8 @@ OpenRouter supports 100+ models. Popular choices:
 - `meta-llama/llama-3.1-8b-instruct`
 
 ### Google
-- `google/gemini-pro-1.5`
-- `google/gemini-flash-1.5`
+- `google/gemini-2.5-pro-preview`
+- `google/gemini-2.5-flash-preview`
 
 ### Other
 - `mistralai/mistral-large`
@@ -86,13 +86,13 @@ Edit `config/openrouter.yaml` to change which models each agent uses:
 agents:
   proposer:
     provider: openrouter
-    model: openai/gpt-4-turbo          # Strong reasoning
+    model: openai/gpt-4o                # Strong reasoning
     temperature: 0.7
     max_tokens: 500
   
   critic:
     provider: openrouter
-    model: anthropic/claude-3.5-sonnet # Excellent at critique
+    model: anthropic/claude-sonnet-4.5 # Excellent at critique
     temperature: 0.8
     max_tokens: 500
   
@@ -104,13 +104,13 @@ agents:
   
   moderator:
     provider: openrouter
-    model: anthropic/claude-3-opus     # Best for summarization
+    model: anthropic/claude-sonnet-4.5 # Best for summarization
     temperature: 0.5
     max_tokens: 400
   
   judge:
     provider: openrouter
-    model: openai/gpt-4-turbo          # Analytical scoring
+    model: openai/gpt-4o               # Analytical scoring
     temperature: 0.4
     max_tokens: 600
 ```
@@ -133,7 +133,7 @@ A typical 6-turn debate with 3 agents uses ~5,000-10,000 tokens total, costing *
 OpenRouter supports automatic fallbacks. Add this to your model names:
 
 ```yaml
-model: "openai/gpt-4-turbo,anthropic/claude-3.5-sonnet"
+model: "openai/gpt-4o,anthropic/claude-sonnet-4.5"
 ```
 
 If GPT-4 is unavailable or rate-limited, OpenRouter automatically tries Claude.
@@ -147,10 +147,10 @@ from orchestration import DebateManager
 
 # All agents use OpenRouter with different models
 proposer = Proposer(
-    provider=OpenRouterProvider(model="openai/gpt-4-turbo")
+    provider=OpenRouterProvider(model="openai/gpt-4o")
 )
 critic = Critic(
-    provider=OpenRouterProvider(model="anthropic/claude-3.5-sonnet")
+    provider=OpenRouterProvider(model="anthropic/claude-sonnet-4.5")
 )
 judge = Judge(
     provider=OpenRouterProvider(model="cohere/command-r-plus")
@@ -184,8 +184,8 @@ export OPENROUTER_API_KEY="sk-or-v1-..."
 ### Model not found
 
 Check that the model name uses OpenRouter's format (`provider/model-name`):
-- ✅ `openai/gpt-4-turbo`
-- ❌ `gpt-4-turbo`
+- ✅ `openai/gpt-4o`
+- ❌ `gpt-4o`
 
 ### Rate limits
 

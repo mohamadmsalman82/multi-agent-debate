@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -83,9 +84,21 @@ class DebateManager:
         self,
         topic: str,
         max_turns: int = 10,
+        on_response: Callable[[int, AgentResponse], None] | None = None,
         **kwargs: Any,
     ) -> DebateResult:
-        """Execute the full debate loop and return results."""
+        """Execute the full debate loop and return results.
+
+        Parameters
+        ----------
+        topic : str
+            The debate topic.
+        max_turns : int
+            Maximum number of turns.
+        on_response : callable, optional
+            Called after each agent response with ``(turn_number, response)``.
+            Use this to stream the conversation to the terminal in real-time.
+        """
         debate_id = await self._init_debate(topic)
         history: list[AgentResponse] = []
         status = "completed"
@@ -115,7 +128,12 @@ class DebateManager:
                     response = await agent.process_turn(state)
                     history.append(response)
                     await self._persist_message(debate_id, response)
-                    logger.info(
+
+                    # Notify caller for live output
+                    if on_response is not None:
+                        on_response(turn, response)
+
+                    logger.debug(
                         "[Turn %d] %s (%s/%s): %s",
                         turn,
                         agent.role.value,

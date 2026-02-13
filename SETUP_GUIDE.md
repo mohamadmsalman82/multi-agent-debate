@@ -36,8 +36,8 @@ python3 cli.py --config config/openrouter.yaml debate \
 ```
 
 **That's it!** The debate will use:
-- GPT-4 Turbo for Proposer
-- Claude 3.5 Sonnet for Critic  
+- GPT-4o for Proposer
+- Claude Sonnet 4.5 for Critic  
 - Command-R Plus for Judge
 
 All through your single OpenRouter key.
@@ -128,11 +128,11 @@ A 3-turn debate typically uses 3,000-5,000 tokens = **$0.01-0.15**
 
 | Agent Role | Best Models |
 |---|---|
-| Proposer | GPT-4 Turbo, Claude 3.5 Sonnet |
-| Critic | Claude 3.5 Sonnet, GPT-4 |
+| Proposer | GPT-4o, Claude Sonnet 4.5 |
+| Critic | Claude Sonnet 4.5, GPT-4o |
 | Fact Checker | Perplexity models (have web search!), Command-R Plus |
-| Moderator | Claude 3 Opus (best at summarization) |
-| Judge | GPT-4 Turbo, Claude 3.5 Sonnet |
+| Moderator | Claude Sonnet 4.5 (great at summarization) |
+| Judge | GPT-4o, Claude Sonnet 4.5 |
 
 ### Protocols
 

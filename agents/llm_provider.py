@@ -152,7 +152,7 @@ class OpenAIProvider(LLMProvider):
 
     name = "openai"
 
-    def __init__(self, model: str = "gpt-4-turbo-preview", **kwargs: Any) -> None:
+    def __init__(self, model: str = "gpt-4o", **kwargs: Any) -> None:
         kwargs.setdefault("api_key_env", "OPENAI_API_KEY")
         super().__init__(model=model, **kwargs)
         import openai
@@ -195,7 +195,7 @@ class AnthropicProvider(LLMProvider):
     name = "anthropic"
 
     def __init__(
-        self, model: str = "claude-3-5-sonnet-20241022", **kwargs: Any
+        self, model: str = "claude-sonnet-4-5", **kwargs: Any
     ) -> None:
         kwargs.setdefault("api_key_env", "ANTHROPIC_API_KEY")
         super().__init__(model=model, **kwargs)
@@ -292,14 +292,14 @@ class CohereProvider(LLMProvider):
 
 class OpenRouterProvider(LLMProvider):
     """Async OpenRouter provider using OpenAI-compatible API.
-    
+
     OpenRouter provides unified access to multiple LLM providers
     (OpenAI, Anthropic, Cohere, Meta, Google, etc.) through a single
     API key and OpenAI-compatible interface.
-    
+
     Model names should use OpenRouter's format, e.g.:
-    - "openai/gpt-4-turbo"
-    - "anthropic/claude-3.5-sonnet"
+    - "openai/gpt-4o"
+    - "anthropic/claude-sonnet-4.5"
     - "cohere/command-r-plus"
     - "meta-llama/llama-3.1-70b-instruct"
     """
@@ -308,11 +308,12 @@ class OpenRouterProvider(LLMProvider):
 
     def __init__(
         self,
-        model: str = "openai/gpt-4-turbo",
+        model: str = "openai/gpt-4o",
         **kwargs: Any,
     ) -> None:
         kwargs.setdefault("api_key_env", "OPENROUTER_API_KEY")
         super().__init__(model=model, **kwargs)
+
         import openai
         self._client = openai.AsyncOpenAI(
             base_url="https://openrouter.ai/api/v1",
@@ -359,7 +360,7 @@ _PROVIDERS: dict[str, type[LLMProvider]] = {
 def create_provider(name: str, **kwargs: Any) -> LLMProvider:
     """Instantiate an LLM provider by its short name.
 
-    >>> provider = create_provider("openai", model="gpt-4-turbo-preview")
+    >>> provider = create_provider("openai", model="gpt-4o")
     """
     cls = _PROVIDERS.get(name.lower())
     if cls is None:

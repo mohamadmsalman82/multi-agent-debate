@@ -22,11 +22,50 @@ import click
 import yaml
 
 from agents import Proposer, Critic, FactChecker, Moderator, Judge, create_provider
-from agents.base import BaseAgent
+from agents.base import AgentResponse, BaseAgent
 from data.database import DebateDatabase
 from evaluation.metrics import compute_all_metrics
 from orchestration.debate_manager import DebateManager
 from viz.visualize import DebateVisualizer
+
+
+# ---------------------------------------------------------------------------
+# Live debate display
+# ---------------------------------------------------------------------------
+
+# Role labels and ANSI colour codes for terminal output
+_ROLE_STYLES: dict[str, tuple[str, str]] = {
+    # role -> (label, ANSI colour code)
+    "proposer":     ("PROPOSER",      "\033[1;34m"),   # bold blue
+    "critic":       ("CRITIC",        "\033[1;31m"),   # bold red
+    "fact_checker": ("FACT CHECKER",  "\033[1;33m"),   # bold yellow
+    "moderator":    ("MODERATOR",     "\033[1;35m"),   # bold magenta
+    "judge":        ("JUDGE",         "\033[1;32m"),   # bold green
+}
+_RESET = "\033[0m"
+_DIM = "\033[2m"
+
+
+def _print_response(turn: int, resp: AgentResponse) -> None:
+    """Pretty-print a single agent response to the terminal."""
+    role_name = resp.role.value
+    label, colour = _ROLE_STYLES.get(role_name, (role_name.upper(), "\033[1m"))
+
+    # Header bar
+    click.echo(f"\n{colour}{'─' * 60}")
+    click.echo(f"  [{label}]  Turn {turn}  •  {resp.model}")
+    click.echo(f"{'─' * 60}{_RESET}")
+
+    # Body – wrap long lines for readability
+    content = resp.content.strip()
+    for paragraph in content.split("\n"):
+        # Indent each paragraph for visual separation
+        click.echo(f"  {paragraph}")
+
+    # Footer – tokens and latency
+    click.echo(
+        f"{_DIM}  [{resp.tokens_used} tokens  •  {resp.latency_ms:.0f} ms]{_RESET}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -82,13 +121,21 @@ def _build_agents(
         provider_name = acfg.get("provider", "openai")
         provider_api_cfg = api_cfg.get(provider_name, {})
 
-        provider = create_provider(
-            provider_name,
-            model=provider_api_cfg.get("model", "gpt-4-turbo-preview"),
-            api_key_env=provider_api_cfg.get("api_key_env"),
-            timeout=timeout,
-            max_retries=max_retries,
-        )
+        # Model resolution order:
+        #   1. Agent-level model (agents.proposer.model)
+        #   2. Provider-level model (api.anthropic.model)
+        #   3. Provider class default
+        model = acfg.get("model") or provider_api_cfg.get("model")
+
+        provider_kwargs: dict[str, Any] = {
+            "api_key_env": provider_api_cfg.get("api_key_env"),
+            "timeout": timeout,
+            "max_retries": max_retries,
+        }
+        if model:
+            provider_kwargs["model"] = model
+
+        provider = create_provider(provider_name, **provider_kwargs)
 
         agent = cls(
             provider=provider,
@@ -146,11 +193,13 @@ def debate(
     cfg = ctx.obj["config"]
     agent_names = [a.strip() for a in agents.split(",")]
 
-    click.echo(f"Topic    : {topic}")
-    click.echo(f"Protocol : {protocol}")
-    click.echo(f"Agents   : {', '.join(agent_names)}")
-    click.echo(f"Max turns: {max_turns}")
-    click.echo()
+    # Print debate header
+    click.echo(f"\n\033[1m{'=' * 60}")
+    click.echo(f"  DEBATE: {topic}")
+    click.echo(f"{'=' * 60}\033[0m")
+    click.echo(f"  Protocol : {protocol}")
+    click.echo(f"  Agents   : {', '.join(agent_names)}")
+    click.echo(f"  Max turns: {max_turns}")
 
     agent_objs = _build_agents(agent_names, cfg)
 
@@ -163,7 +212,11 @@ def debate(
 
         try:
             manager = DebateManager(agents=agent_objs, protocol=protocol, db=db)
-            result = await manager.run_debate(topic=topic, max_turns=max_turns)
+            result = await manager.run_debate(
+                topic=topic,
+                max_turns=max_turns,
+                on_response=_print_response,
+            )
 
             # Compute and display metrics
             metrics = compute_all_metrics(result.history, topic=topic, max_turns=max_turns)
