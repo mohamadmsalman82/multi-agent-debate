@@ -60,6 +60,12 @@ class TestCreateProvider:
         with pytest.raises(ValueError, match="No API key"):
             create_provider("openai")  # no key, no env var
 
+    def test_openrouter_provider_created(self):
+        """Test that OpenRouter provider can be instantiated."""
+        provider = create_provider("openrouter", api_key="test-key", model="openai/gpt-4")
+        assert provider.name == "openrouter"
+        assert provider.model == "openai/gpt-4"
+
 
 class TestLLMResponse:
     def test_frozen_dataclass(self):

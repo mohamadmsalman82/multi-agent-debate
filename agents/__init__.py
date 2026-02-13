@@ -11,6 +11,7 @@ from agents.llm_provider import (
     OpenAIProvider,
     AnthropicProvider,
     CohereProvider,
+    OpenRouterProvider,
     create_provider,
 )
 
@@ -25,5 +26,6 @@ __all__ = [
     "OpenAIProvider",
     "AnthropicProvider",
     "CohereProvider",
+    "OpenRouterProvider",
     "create_provider",
 ]

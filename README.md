@@ -1,14 +1,16 @@
 # Multi-Agent Debate System
 
-A Python-based multi-agent debate framework where LLM agents engage in structured debates using multiple providers — **OpenAI GPT**, **Anthropic Claude**, and **Cohere Command-R**.
+A Python-based multi-agent debate framework where LLM agents engage in structured debates using multiple providers — **OpenAI GPT**, **Anthropic Claude**, **Cohere Command-R**, and **OpenRouter**.
 
 Each agent can be backed by a **different LLM provider**, enabling cross-model comparisons and heterogeneous debates where GPT-4 argues against Claude while Cohere fact-checks.
+
+**NEW:** Use **OpenRouter** with a single API key to access all models from OpenAI, Anthropic, Cohere, Meta, Google, and more!
 
 ---
 
 ## Features
 
-- **Multi-provider support** — OpenAI, Anthropic, and Cohere behind a unified async interface with automatic retries and rate-limit handling
+- **Multi-provider support** — OpenAI, Anthropic, Cohere, and OpenRouter behind a unified async interface with automatic retries and rate-limit handling
 - **5 specialised agents** — Proposer, Critic, Fact Checker, Moderator, Judge — each with role-specific prompting strategies
 - **3 debate protocols** — Round Robin, Adversarial, Collaborative — controlling turn-taking dynamics
 - **SQLite persistence** — full debate history, agent configs, and evaluation metrics stored automatically
@@ -88,16 +90,27 @@ pip install -r requirements.txt
 You need at least **one** provider key. Export whichever you have:
 
 ```bash
+# Option A: Use individual provider keys
 export OPENAI_API_KEY="sk-..."
 export ANTHROPIC_API_KEY="sk-ant-..."
 export COHERE_API_KEY="..."
+
+# Option B: Use OpenRouter (recommended - one key for all models)
+export OPENROUTER_API_KEY="sk-or-..."
 ```
 
 ### 3. Run a debate
 
 ```bash
-# Simple 3-agent debate
+# Simple 3-agent debate (uses config/default.yaml)
 python cli.py debate \
+  --topic "Should AI development be regulated?" \
+  --protocol round_robin \
+  --agents proposer,critic,judge \
+  --max-turns 4
+
+# Use OpenRouter for all models (if using OpenRouter)
+python cli.py --config config/openrouter.yaml debate \
   --topic "Should AI development be regulated?" \
   --protocol round_robin \
   --agents proposer,critic,judge \
@@ -138,6 +151,8 @@ python cli.py run-experiment --benchmark-config config/experiment.yaml
 
 ## Python API
 
+### Using individual providers
+
 ```python
 import asyncio
 from orchestration import DebateManager
@@ -164,6 +179,35 @@ async def main():
     print(f"Proposer used: {proposer.provider.name}")   # openai
     print(f"Critic used:   {critic.provider.name}")      # anthropic
     print(f"Judge used:    {judge.provider.name}")        # cohere
+
+asyncio.run(main())
+```
+
+### Using OpenRouter (one API key for all models)
+
+```python
+import asyncio
+from orchestration import DebateManager
+from agents import Proposer, Critic, Judge
+from agents.llm_provider import OpenRouterProvider
+
+# All agents use OpenRouter with different models
+proposer = Proposer(provider=OpenRouterProvider(model="openai/gpt-4-turbo"))
+critic   = Critic(provider=OpenRouterProvider(model="anthropic/claude-3.5-sonnet"))
+judge    = Judge(provider=OpenRouterProvider(model="cohere/command-r-plus"))
+
+manager = DebateManager(
+    agents=[proposer, critic, judge],
+    protocol="round_robin",
+)
+
+async def main():
+    result = await manager.run_debate(
+        topic="Should AI development be regulated?",
+        max_turns=6,
+    )
+    print(result.summary)
+    print(f"All agents used OpenRouter with different models")
 
 asyncio.run(main())
 ```
@@ -211,7 +255,7 @@ asyncio.run(main())
 
 ## Configuration
 
-All settings live in `config/default.yaml`:
+### Using individual providers (config/default.yaml)
 
 ```yaml
 api:
@@ -224,6 +268,9 @@ api:
   cohere:
     model: command-r-plus
     api_key_env: COHERE_API_KEY
+  openrouter:
+    model: openai/gpt-4-turbo
+    api_key_env: OPENROUTER_API_KEY
   timeout: 30
   max_retries: 3
 
@@ -239,7 +286,39 @@ agents:
   # ... etc.
 ```
 
-To use a single provider for all agents, change every agent's `provider` field to the same value.
+### Using OpenRouter (config/openrouter.yaml)
+
+```yaml
+agents:
+  proposer:
+    provider: openrouter
+    model: openai/gpt-4-turbo      # Access GPT-4 via OpenRouter
+    temperature: 0.7
+  critic:
+    provider: openrouter
+    model: anthropic/claude-3.5-sonnet  # Access Claude via OpenRouter
+    temperature: 0.8
+  fact_checker:
+    provider: openrouter
+    model: cohere/command-r-plus   # Access Cohere via OpenRouter
+    temperature: 0.3
+  # ... etc.
+```
+
+Then run:
+```bash
+python cli.py --config config/openrouter.yaml debate --topic "..."
+```
+
+### OpenRouter Model Names
+
+OpenRouter uses a `provider/model` format:
+- `openai/gpt-4-turbo`, `openai/gpt-4`, `openai/gpt-3.5-turbo`
+- `anthropic/claude-3.5-sonnet`, `anthropic/claude-3-opus`
+- `cohere/command-r-plus`, `cohere/command-r`
+- `meta-llama/llama-3.1-70b-instruct`
+- `google/gemini-pro-1.5`
+- And many more — see [OpenRouter docs](https://openrouter.ai/docs)
 
 ---
 
@@ -263,7 +342,7 @@ All tests use a `MockProvider` — no API keys or network calls needed.
 
 | Dependency | Purpose |
 |---|---|
-| `openai >= 1.0` | OpenAI GPT async client |
+| `openai >= 1.0` | OpenAI GPT async client (also used for OpenRouter) |
 | `anthropic >= 0.18` | Anthropic Claude async client |
 | `cohere >= 5.0` | Cohere Command-R async client |
 | `pydantic >= 2.0` | Data validation and models |

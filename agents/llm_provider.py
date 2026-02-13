@@ -1,4 +1,4 @@
-"""LLM Provider abstraction layer for OpenAI, Anthropic, and Cohere.
+"""LLM Provider abstraction layer for OpenAI, Anthropic, Cohere, and OpenRouter.
 
 Provides a unified async interface to multiple LLM backends with
 built-in retry logic, rate-limit handling, and token tracking.
@@ -287,6 +287,64 @@ class CohereProvider(LLMProvider):
 
 
 # ---------------------------------------------------------------------------
+# OpenRouter
+# ---------------------------------------------------------------------------
+
+class OpenRouterProvider(LLMProvider):
+    """Async OpenRouter provider using OpenAI-compatible API.
+    
+    OpenRouter provides unified access to multiple LLM providers
+    (OpenAI, Anthropic, Cohere, Meta, Google, etc.) through a single
+    API key and OpenAI-compatible interface.
+    
+    Model names should use OpenRouter's format, e.g.:
+    - "openai/gpt-4-turbo"
+    - "anthropic/claude-3.5-sonnet"
+    - "cohere/command-r-plus"
+    - "meta-llama/llama-3.1-70b-instruct"
+    """
+
+    name = "openrouter"
+
+    def __init__(
+        self,
+        model: str = "openai/gpt-4-turbo",
+        **kwargs: Any,
+    ) -> None:
+        kwargs.setdefault("api_key_env", "OPENROUTER_API_KEY")
+        super().__init__(model=model, **kwargs)
+        import openai
+        self._client = openai.AsyncOpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=self.api_key,
+            timeout=self.timeout,
+        )
+
+    async def _call_api(
+        self,
+        messages: list[dict[str, str]],
+        *,
+        temperature: float,
+        max_tokens: int,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        response = await self._client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            **kwargs,
+        )
+        choice = response.choices[0]
+        usage = response.usage
+        return {
+            "text": choice.message.content or "",
+            "tokens_used": usage.total_tokens if usage else 0,
+            "raw": response.model_dump(),
+        }
+
+
+# ---------------------------------------------------------------------------
 # Factory
 # ---------------------------------------------------------------------------
 
@@ -294,6 +352,7 @@ _PROVIDERS: dict[str, type[LLMProvider]] = {
     "openai": OpenAIProvider,
     "anthropic": AnthropicProvider,
     "cohere": CohereProvider,
+    "openrouter": OpenRouterProvider,
 }
 
 
